@@ -1,0 +1,112 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, Segoe UI, Arial, sans-serif; background: #f4f5f7; color: #1f2933; }
+.contenedor { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.encabezado { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.encabezado h1 { margin: 0; }
+.subtitulo { color: #6b7280; }
+
+.barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+.barra input[type="search"] { flex: 1; min-width: 220px; }
+input, select, button { font: inherit; padding: 8px 10px; border: 1px solid #c4c9d0; border-radius: 6px; background: #fff; }
+button { cursor: pointer; }
+button:hover { background: #eef0f3; }
+button.primario { background: #2563eb; border-color: #2563eb; color: #fff; }
+button.primario:hover { background: #1d4ed8; }
+button.peligro { color: #b91c1c; border-color: #fca5a5; }
+button:disabled { opacity: .6; cursor: wait; }
+
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
+th, td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+th { background: #eef0f3; font-size: 13px; }
+.num { text-align: right; white-space: nowrap; }
+.acciones { white-space: nowrap; text-align: right; }
+.acciones button { margin-left: 6px; padding: 4px 8px; }
+.inactivo { opacity: .5; }
+.stock-bajo { color: #b91c1c; font-weight: 700; }
+.vacio { text-align: center; color: #6b7280; padding: 16px; }
+
+.fondo-modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal { background: #fff; border-radius: 10px; padding: 20px; width: 100%; max-width: 560px; max-height: 95vh; overflow-y: auto; }
+.modal h2 { margin-top: 0; }
+.modal label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 14px; flex: 1; }
+.modal label.check { flex-direction: row; align-items: center; gap: 8px; }
+.fila { display: flex; gap: 12px; }
+.botones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+.error { color: #b91c1c; font-size: 13px; margin: -6px 0 10px; }
+.error-general { background: #fee2e2; color: #991b1b; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px; }
+.ayuda { color: #6b7280; font-size: 13px; margin: -4px 0 10px; }
+
+/* ---- Etapa 3: pestañas y pantalla de escaneo ---- */
+.pestanas { display: flex; gap: 8px; margin-bottom: 16px; }
+.pestanas button { padding: 10px 16px; }
+.pestanas button.activa { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+.escaneo { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+@media (max-width: 800px) { .escaneo { grid-template-columns: 1fr; } }
+
+.campo-escaneo { width: 100%; font-size: 22px; padding: 14px 16px; border: 2px solid #2563eb; border-radius: 8px; }
+.campo-escaneo:focus { outline: 3px solid #bfdbfe; }
+
+.tarjeta { background: #fff; border-radius: 10px; padding: 20px; margin-top: 16px; }
+.tarjeta h2 { margin: 0 0 4px; }
+.tarjeta .precio { font-size: 44px; font-weight: 700; margin: 12px 0; }
+.detalle { color: #6b7280; font-size: 14px; }
+.insignia { display: inline-block; font-size: 12px; font-weight: 400; padding: 2px 8px; margin-left: 10px; border-radius: 999px; background: #e0e7ff; color: #3730a3; vertical-align: middle; }
+
+.aviso { background: #fef3c7; color: #92400e; padding: 10px 12px; border-radius: 6px; margin-top: 12px; }
+
+.resultados { list-style: none; padding: 0; margin: 12px 0 0; background: #fff; border-radius: 8px; overflow: hidden; }
+.resultados button { width: 100%; display: flex; justify-content: space-between; border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0; text-align: left; }
+
+.historial { background: #fff; border-radius: 10px; padding: 12px 16px; }
+.historial h3 { margin: 0 0 8px; font-size: 15px; }
+.historial ul { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.historial li { padding: 6px 0; border-bottom: 1px solid #eef0f3; }
+.historial li.no-existe { color: #b91c1c; }
+
+/* ---- Etapa 4: caja ---- */
+.caja { display: grid; grid-template-columns: 1fr 340px; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .caja { grid-template-columns: 1fr; } }
+
+.panel { background: #fff; border-radius: 10px; padding: 16px; }
+.panel-total { position: sticky; top: 16px; }
+.fila-total { display: flex; justify-content: space-between; margin: 6px 0; }
+.total-grande { font-size: 40px; font-weight: 700; text-align: right; margin: 10px 0 14px; }
+.panel-total button { width: 100%; margin-top: 8px; padding: 12px; }
+.panel-total button.primario { font-size: 20px; }
+.descuento { display: flex; gap: 6px; margin: 8px 0; }
+.descuento input { flex: 1; min-width: 0; }
+
+.cantidad { display: inline-flex; gap: 4px; align-items: center; }
+.cantidad input { width: 60px; text-align: center; }
+.cantidad button, .quitar { padding: 4px 10px; }
+.aviso-linea { color: #b45309; font-size: 12px; }
+
+.atajos { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 14px; }
+.pago-fila { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.pago-fila span { width: 120px; }
+.pago-fila input { flex: 1; text-align: right; font-size: 18px; }
+.resumen-pago { padding: 10px 12px; border-radius: 8px; background: #f3f4f6; margin: 10px 0; font-size: 18px; }
+.resumen-pago.ok { background: #dcfce7; color: #166534; }
+.resumen-pago.falta { background: #fef3c7; color: #92400e; }
+
+.ticket-venta { font-size: 14px; }
+.ticket-venta table { margin: 12px 0; border: 1px solid #e5e7eb; }
+.advertencia { background: #fef3c7; color: #92400e; padding: 10px 12px; border-radius: 6px; margin: 10px 0; }
+
+/* ---- Etapa 5: ingreso de mercadería y stock ---- */
+.campo-linea { width: 110px; text-align: right; }
+.pie-compra { display: flex; justify-content: flex-end; align-items: center; gap: 24px; margin-top: 12px; }
+.pie-compra .total-grande { margin: 0; }
+.pie-compra button { padding: 14px 24px; font-size: 18px; }
+.modal.ancho { max-width: 760px; }
+
+.neg { color: #b91c1c; }
+.pos { color: #166534; }
+.exito { background: #dcfce7; color: #166534; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px; }
+.vencido { color: #b91c1c; font-weight: 700; font-size: 12px; }
+
+.stock-detalle { display: grid; grid-template-columns: 340px 1fr; gap: 16px; align-items: start; margin-top: 16px; }
+@media (max-width: 900px) { .stock-detalle { grid-template-columns: 1fr; } }
+.stock-grande { font-size: 44px; font-weight: 700; margin: 8px 0; }
+.campo-form { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 14px; }
