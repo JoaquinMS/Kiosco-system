@@ -1,6 +1,7 @@
 // Define las tablas. "IF NOT EXISTS" permite ejecutarlo muchas veces sin romper nada.
 import db from './conexion.js';
 import { crearTablasEtapa5 } from './esquema5.js';
+import { crearTablasEtapa6 } from './esquema6.js';
 
 export function crearTablas() {
   db.exec(`
@@ -95,9 +96,9 @@ export function crearTablas() {
 
   migrarStockInicial();
   crearTablasEtapa5();
-  
-
-
+  migrarStockInicial();
+  crearTablasEtapa5();
+  crearTablasEtapa6();
 }
 
 // Los productos creados antes de esta etapa tienen stock pero ningún movimiento.

@@ -141,9 +141,11 @@ export function crear(datos) {
     const advertencias = [];
     for (const l of lineas) {
       const p = l.producto;
-      repo.insertarItem(ventaId, {
+        repo.insertarItem(ventaId, {
         producto_id: p.id, nombre: p.nombre, tipo_unidad: p.tipo_unidad, cantidad: l.cantidad,
-        precio_unitario: p.precio_venta, costo_unitario: p.costo, subtotal: l.subtotal,
+        precio_unitario: p.precio_venta, costo_unitario: p.costo,
+        costo_promedio_unitario: p.costo_promedio > 0 ? p.costo_promedio : p.costo,
+        subtotal: l.subtotal,
       });
       repoProductos.cambiarStock(p.id, -l.cantidad);
       if (p.controla_vencimiento) repoLotes.consumirFEFO(p.id, l.cantidad);

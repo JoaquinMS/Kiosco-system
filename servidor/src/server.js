@@ -9,6 +9,8 @@ import rutasVentas from './rutas/ventas.js';
 import rutasCompras from './rutas/compras.js';
 import rutasProveedores from './rutas/proveedores.js';
 import rutasStock from './rutas/stock.js';
+import rutasAlertas from './rutas/alertas.js';
+import rutasReportes from './rutas/reportes.js';
 
 crearTablas(); // se asegura de que las tablas existan al arrancar
 
@@ -48,6 +50,8 @@ await app.register(rutasVentas, { prefix: '/api/ventas' });
 await app.register(rutasCompras, { prefix: '/api/compras' });
 await app.register(rutasProveedores, { prefix: '/api/proveedores' });
 await app.register(rutasStock, { prefix: '/api/stock' });
+await app.register(rutasAlertas, { prefix: '/api/alertas' });
+await app.register(rutasReportes, { prefix: '/api/reportes' });
 
 try {
   // 127.0.0.1 = solo accesible desde esta PC. Más adelante lo abrimos a la red del local.

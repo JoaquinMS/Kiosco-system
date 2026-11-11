@@ -30,6 +30,11 @@ export const api = {
   
   buscarPorCodigo: (codigo) => pedir(`/api/productos/por-codigo/${encodeURIComponent(codigo)}`),
 
+  alertas: (dias) => pedir(dias ? `/api/alertas?dias=${dias}` : '/api/alertas'),
+  reporteVentas: (p) => pedir(`/api/reportes/ventas?${new URLSearchParams(p)}`),
+  reporteMasVendidos: (p) => pedir(`/api/reportes/mas-vendidos?${new URLSearchParams(p)}`),
+  reporteCaja: (fecha) => pedir(`/api/reportes/caja?fecha=${fecha}`),
+
   listarProductos: (filtros) => {
     const params = new URLSearchParams();
     if (filtros.buscar) params.set('buscar', filtros.buscar);
@@ -63,3 +68,8 @@ export const api = {
   crearAjuste: (datos) => pedir('/api/stock/ajustes', { method: 'POST', body: JSON.stringify(datos) }),
 
 };
+
+// Dirección para descargar un CSV (el navegador lo baja solo gracias a Content-Disposition).
+export function urlCsv(ruta, params) {
+  return `/api/reportes/${ruta}?${new URLSearchParams(params)}`;
+}

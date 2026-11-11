@@ -17,10 +17,10 @@ export function insertarItem(ventaId, i) {
   db.prepare(`
     INSERT INTO venta_items
       (venta_id, producto_id, nombre_snapshot, tipo_unidad, cantidad,
-       precio_unitario, costo_unitario, subtotal)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       precio_unitario, costo_unitario, costo_promedio_unitario, subtotal)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(ventaId, i.producto_id, i.nombre, i.tipo_unidad, i.cantidad,
-         i.precio_unitario, i.costo_unitario, i.subtotal);
+         i.precio_unitario, i.costo_unitario, i.costo_promedio_unitario, i.subtotal);
 }
 
 export function insertarPago(ventaId, medio, monto) {

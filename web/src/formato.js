@@ -116,3 +116,25 @@ export function formatearCantidadConSigno(base, tipoUnidad) {
   const signo = base > 0 ? '+' : base < 0 ? '−' : '';
   return signo + formatearCantidad(Math.abs(base), tipoUnidad);
 }
+
+// ---- Etapa 6 ----
+export function sumarDiasISO(iso, dias) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
+// El período viene como '2026-10-13' (día), '2026-10-12' (lunes de la semana) o '2026-10' (mes).
+export function etiquetaPeriodo(periodo, agrupar) {
+  if (agrupar === 'mes') {
+    const [a, m] = periodo.split('-');
+    return `${m}/${a}`;
+  }
+  if (agrupar === 'semana') return `Semana del ${formatearFecha(periodo)}`;
+  return formatearFecha(periodo);
+}
+
+export function porcentaje(parte, total) {
+  if (!total) return '—';
+  return ((parte / total) * 100).toFixed(1).replace('.', ',') + ' %';
+}
