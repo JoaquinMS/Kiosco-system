@@ -2,6 +2,7 @@
 import db from './conexion.js';
 import { crearTablasEtapa5 } from './esquema5.js';
 import { crearTablasEtapa6 } from './esquema6.js';
+import { crearTablasEtapa7 } from './esquema7.js';
 
 export function crearTablas() {
   db.exec(`
@@ -98,8 +99,10 @@ export function crearTablas() {
   crearTablasEtapa5();
   migrarStockInicial();
   crearTablasEtapa5();
-  crearTablasEtapa6();
+  crearTablasEtapa6();  
+  crearTablasEtapa7();
 }
+
 
 // Los productos creados antes de esta etapa tienen stock pero ningún movimiento.
 // Les creamos un movimiento STOCK_INICIAL para que el historial explique su stock.

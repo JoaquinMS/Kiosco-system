@@ -9,6 +9,8 @@ import FormularioProducto from './FormularioProducto.jsx';
 import ModalPeso from './ModalPeso.jsx';
 import ModalCobro from './ModalCobro.jsx';
 import Ticket from './Ticket.jsx';
+import ModalAutorizacion from './ModalAutorizacion.jsx';
+import { useSesion } from './SesionContext.jsx';
 
 const PARECE_CODIGO = /^[0-9]{6,}$/;
 const MAX_CANTIDAD = 1_000_000;
@@ -62,6 +64,8 @@ export default function PantallaCaja() {
   const [guardando, setGuardando] = useState(false);
   const [errorCobro, setErrorCobro] = useState('');
   const [ticket, setTicket] = useState(null);
+  const { puede } = useSesion();
+  const [pedirAutorizacion, setPedirAutorizacion] = useState(null); // { pagos, error }
 
   useEffect(() => {
     api.listarCategorias().then(setCategorias).catch((e) => setError(e.message));
@@ -74,7 +78,7 @@ export default function PantallaCaja() {
   const total = subtotal - desc.centavos;
   const puedeCobrar = carrito.length > 0 && !desc.error && total > 0;
 
-  const hayVentana = codigoNuevo !== null || pesoPendiente !== null || cobrando || ticket !== null;
+    const hayVentana = codigoNuevo !== null || pesoPendiente !== null || cobrando || ticket !== null || pedirAutorizacion !== null;
 
   // ---- Atajos de teclado: F8 cobrar, F9 cancelar ----
   // Sin lista de dependencias: se vuelve a registrar en cada render y siempre ve el estado actual.
@@ -198,7 +202,7 @@ export default function PantallaCaja() {
     setCobrando(true);
   }
 
-  async function confirmarCobro(pagos) {
+  async function confirmarCobro(pagos, autorizacion = null) {
     setGuardando(true);
     setErrorCobro('');
     try {
@@ -207,13 +211,21 @@ export default function PantallaCaja() {
         items: carrito.map((l) => ({ producto_id: l.producto.id, cantidad: l.cantidad })),
         descuento: desc.payload,
         pagos,
+        ...(autorizacion ? { autorizacion } : {}),
       });
+      setPedirAutorizacion(null);
       setCobrando(false);
       setTicket(venta);
       setCarrito([]);
       setTextoDesc('');
     } catch (e) {
-      setErrorCobro(e.message); // la ventana queda abierta para reintentar (mismo uuid)
+      if (e.codigo === 'DESCUENTO_REQUIERE_AUTORIZACION') {
+        setPedirAutorizacion({ pagos, error: '' });   // pide la clave de un dueño
+      } else if (autorizacion) {
+        setPedirAutorizacion({ pagos, error: e.message }); // clave incorrecta: se queda en esa ventana
+      } else {
+        setErrorCobro(e.message); // la ventana queda abierta para reintentar (mismo uuid)
+      }
     } finally {
       setGuardando(false);
     }
@@ -344,7 +356,9 @@ export default function PantallaCaja() {
             <p>El código <strong>{codigoNuevo}</strong> todavía no existe en el sistema.</p>
             <div className="botones">
               <button onClick={cerrarNuevo}>Cancelar</button>
-              <button className="primario" autoFocus onClick={() => setAltaAbierta(true)}>Crear producto</button>
+                {puede('productos:crear')
+                ? <button className="primario" autoFocus onClick={() => setAltaAbierta(true)}>Crear producto</button>
+                : <span className="detalle">Pedile al dueño que cargue este producto.</span>}
             </div>
           </div>
         </div>
@@ -368,6 +382,15 @@ export default function PantallaCaja() {
           error={errorCobro}
           onConfirmar={confirmarCobro}
           onCancelar={() => setCobrando(false)}
+        />
+      )}
+
+      {pedirAutorizacion && (
+        <ModalAutorizacion
+          error={pedirAutorizacion.error}
+          enviando={guardando}
+          onConfirmar={(aut) => confirmarCobro(pedirAutorizacion.pagos, aut)}
+          onCancelar={() => setPedirAutorizacion(null)}
         />
       )}
 

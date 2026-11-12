@@ -1,13 +1,15 @@
 import { useRef, useState } from 'react';
 import { api } from './api.js';
 import { pesosACentavos, cantidadABase, centavosATexto, baseATexto } from './formato.js';
+import { useSesion } from './SesionContext.jsx';
 
 // producto = null  -> alta de un producto nuevo
 // producto = {...} -> edición
 export default function FormularioProducto({ producto, codigoInicial = '', categorias, onGuardado, onCancelar }) {
+  const { puede } = useSesion();
   const esEdicion = producto !== null;
   const refNombre = useRef(null);
-
+  
   const [f, setF] = useState(() => ({
     codigo_barras: producto?.codigo_barras ?? codigoInicial,
     nombre: producto?.nombre ?? '',
@@ -135,9 +137,11 @@ export default function FormularioProducto({ producto, codigoInicial = '', categ
         {esEdicion && <div className="ayuda">El tipo de unidad no se puede cambiar una vez creado el producto.</div>}
 
         <div className="fila">
-          <label>Costo{porKg} ($)
-            <input value={f.costo} onChange={cambiar('costo')} inputMode="decimal" placeholder="1200,50" />
-          </label>
+          {puede('productos:ver_costos') && (
+            <label>Costo{porKg} ($)
+              <input value={f.costo} onChange={cambiar('costo')} inputMode="decimal" placeholder="1200,50" />
+            </label>
+          )}
           <label>Precio de venta{porKg} ($)
             <input value={f.precio_venta} onChange={cambiar('precio_venta')} inputMode="decimal" placeholder="1500,00" />
           </label>

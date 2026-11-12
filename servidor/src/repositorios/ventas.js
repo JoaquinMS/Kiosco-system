@@ -7,9 +7,9 @@ export function buscarPorUuid(uuid) {
 
 export function insertarVenta(v) {
   const r = db.prepare(`
-    INSERT INTO ventas (client_uuid, subtotal, descuento, total, vuelto)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(v.client_uuid, v.subtotal, v.descuento, v.total, v.vuelto);
+    INSERT INTO ventas (client_uuid, subtotal, descuento, total, vuelto, usuario_id, autorizado_por)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(v.client_uuid, v.subtotal, v.descuento, v.total, v.vuelto, v.usuario_id, v.autorizado_por);
   return Number(r.lastInsertRowid);
 }
 
@@ -30,8 +30,10 @@ export function insertarPago(ventaId, medio, monto) {
 
 export function buscarPorId(id) {
   return db.prepare(`
-    SELECT id, client_uuid, subtotal, descuento, total, vuelto, estado, creado_en
-    FROM ventas WHERE id = ?
+    SELECT v.id, v.client_uuid, v.subtotal, v.descuento, v.total, v.vuelto, v.estado,
+           v.creado_en, v.anulada_en, v.anulada_motivo, u.nombre AS vendedor
+    FROM ventas v LEFT JOIN usuarios u ON u.id = v.usuario_id
+    WHERE v.id = ?
   `).get(id);
 }
 
@@ -47,9 +49,27 @@ export function pagosDe(ventaId) {
   return db.prepare('SELECT medio, monto FROM venta_pagos WHERE venta_id = ? ORDER BY id').all(ventaId);
 }
 
-export function listarRecientes(limite) {
+// "fecha" (opcional) = un día local 'AAAA-MM-DD' -> se convierte a límites UTC (Mendoza = UTC-3).
+export function listar({ fecha, limite }) {
+  const where = fecha
+    ? "WHERE v.creado_en >= datetime(?, '+3 hours') AND v.creado_en < datetime(?, '+1 day', '+3 hours')"
+    : '';
+  const params = fecha ? [fecha, fecha, limite] : [limite];
   return db.prepare(`
-    SELECT id, subtotal, descuento, total, estado, creado_en
-    FROM ventas ORDER BY id DESC LIMIT ?
-  `).all(limite);
+    SELECT v.id, v.subtotal, v.descuento, v.total, v.estado, v.creado_en,
+           u.nombre AS vendedor,
+           (SELECT group_concat(medio, ', ') FROM venta_pagos WHERE venta_id = v.id) AS medios
+    FROM ventas v LEFT JOIN usuarios u ON u.id = v.usuario_id
+    ${where}
+    ORDER BY v.id DESC LIMIT ?
+  `).all(...params);
+}
+
+// Devuelve cuántas filas cambió: 0 si la venta ya estaba anulada.
+export function marcarAnulada(id, usuarioId, motivo) {
+  return db.prepare(`
+    UPDATE ventas
+    SET estado = 'ANULADA', anulada_en = datetime('now'), anulada_por = ?, anulada_motivo = ?
+    WHERE id = ? AND estado = 'COMPLETADA'
+  `).run(usuarioId, motivo, id).changes;
 }

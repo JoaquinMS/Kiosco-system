@@ -7,8 +7,10 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "db:init": "node src/db/init.js",
-    "db:verificar": "node src/db/verificar.js"
+    "db:verificar": "node src/db/verificar.js",
+    "admin:reset": "node src/db/reset-admin.js"
   },
+  
   "dependencies": {
     "fastify": "^5.12.5"
   }

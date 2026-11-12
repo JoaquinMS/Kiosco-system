@@ -5,6 +5,7 @@ import * as repoCategorias from '../repositorios/categorias.js';
 import * as repoMov from '../repositorios/movimientos.js';
 import { ErrorApp } from '../lib/errores.js';
 import * as repoLotes from '../repositorios/lotes.js';
+import * as repoPrecios from '../repositorios/precios.js';
 
 
 const MAXIMO = 2_000_000_000;
@@ -134,24 +135,24 @@ export function obtenerPorCodigo(codigoCrudo) {
 
 // Se hace dentro de una transacción: la comprobación de duplicado y el INSERT
 // ocurren juntos, sin que nadie se pueda "colar" en el medio.
-export function crear(datos) {
+export function crear(datos, usuario) {
   const p = validar(datos, { esCreacion: true });
   return transaccion(() => {
     verificarCategoria(p.categoria_id);
     verificarCodigoLibre(p.codigo_barras, null);
     const id = repo.insertar(p);
-    // El stock inicial también es un movimiento: así el historial explica TODO el stock.
     if (p.stock_actual > 0) {
       repoMov.registrar({
         productoId: id, tipo: 'STOCK_INICIAL', cantidad: p.stock_actual,
         stockResultante: p.stock_actual, motivo: 'Stock inicial al crear el producto',
+        usuarioId: usuario?.id ?? null,
       });
     }
     return repo.buscarPorId(id);
   });
 }
 
-export function actualizar(idCrudo, datos) {
+export function actualizar(idCrudo, datos, usuario) {
   const id = aId(idCrudo);
   const p = validar(datos, { esCreacion: false });
   return transaccion(() => {
@@ -163,6 +164,12 @@ export function actualizar(idCrudo, datos) {
     verificarCategoria(p.categoria_id);
     verificarCodigoLibre(p.codigo_barras, id);
     repo.actualizar(id, p);
+    if (p.precio_venta !== actual.precio_venta) {
+      repoPrecios.registrarHistorial({
+        productoId: id, anterior: actual.precio_venta, nuevo: p.precio_venta,
+        motivo: 'EDICION', usuarioId: usuario.id,
+      });
+    }
     return repo.buscarPorId(id);
   });
 }
@@ -194,7 +201,7 @@ export function lotes(idCrudo) {
 }
 
 // Cambio de precio puntual (lo usan las sugerencias del ingreso de mercadería).
-export function cambiarPrecio(idCrudo, datos) {
+export function cambiarPrecio(idCrudo, datos, usuario) {
   const id = aId(idCrudo);
   const precio = datos?.precio_venta;
   if (!Number.isInteger(precio) || precio <= 0 || precio > MAXIMO) {
@@ -202,7 +209,15 @@ export function cambiarPrecio(idCrudo, datos) {
       precio_venta: 'El precio debe ser mayor a 0',
     });
   }
-  obtenerOFallar(id);
-  repo.cambiarPrecio(id, precio);
-  return repo.buscarPorId(id);
+  return transaccion(() => {
+    const actual = obtenerOFallar(id);
+    if (precio !== actual.precio_venta) {
+      repo.cambiarPrecio(id, precio);
+      repoPrecios.registrarHistorial({
+        productoId: id, anterior: actual.precio_venta, nuevo: precio,
+        motivo: 'SUGERENCIA', usuarioId: usuario.id,
+      });
+    }
+    return repo.buscarPorId(id);
+  });
 }

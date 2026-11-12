@@ -3,18 +3,22 @@ import { transaccion } from '../db/conexion.js';
 import * as repo from '../repositorios/ventas.js';
 import * as repoProductos from '../repositorios/productos.js';
 import * as repoMov from '../repositorios/movimientos.js';
+import * as repoLotes from '../repositorios/lotes.js';
 import { ErrorApp } from '../lib/errores.js';
 import { subtotalLinea, calcularDescuento, MAX_MONTO } from '../lib/dinero.js';
-import { PERMITIR_STOCK_NEGATIVO } from '../config.js';
-import * as repoLotes from '../repositorios/lotes.js';
+import { fechaValida } from '../lib/fechas.js';
+import { PERMITIR_STOCK_NEGATIVO, DESCUENTO_MAX_EMPLEADO } from '../config.js';
+import { verificarCredenciales } from './auth.js';
+import { permisosDe } from '../auth/permisos.js';
 
 const MEDIOS = ['EFECTIVO', 'TRANSFERENCIA', 'TARJETA'];
 const MAX_CANTIDAD = 1_000_000; // 1.000.000 de unidades, o 1000 kg
 
 const esEnteroPositivo = (n) => Number.isInteger(n) && n > 0;
+const SIN_LIMITE = 'descuentos:sin_limite';
 
 // Valida la FORMA de lo que llega (tipos y rangos). Las reglas que dependen de la base
-// (¿existe el producto?, ¿alcanza el pago?) se comprueban después, dentro de la transacción.
+// se comprueban después, dentro de la transacción.
 function validar(datos) {
   if (datos === null || typeof datos !== 'object') {
     throw new ErrorApp(400, 'VALIDACION', 'Faltan los datos de la venta');
@@ -54,6 +58,18 @@ function validar(datos) {
     }
   }
 
+  // Autorización de un dueño para un descuento alto (opcional)
+  let autorizacion = null;
+  if (datos.autorizacion !== null && datos.autorizacion !== undefined) {
+    const a = datos.autorizacion;
+    if (typeof a?.username !== 'string' || typeof a?.password !== 'string'
+        || !a.username.trim() || !a.password) {
+      errores.autorizacion = 'Completá el usuario y la contraseña del dueño';
+    } else {
+      autorizacion = { username: a.username.trim(), password: a.password };
+    }
+  }
+
   // Pagos: lo que entrega el cliente por cada medio (puede superar el total, por el vuelto).
   let pagos = [];
   if (!Array.isArray(datos.pagos) || datos.pagos.length === 0 || datos.pagos.length > 3) {
@@ -69,15 +85,26 @@ function validar(datos) {
   if (Object.keys(errores).length > 0) {
     throw new ErrorApp(400, 'VALIDACION', 'Hay datos que corregir', errores);
   }
-  return { client_uuid: uuid, items, descuento, pagos };
+  return { client_uuid: uuid, items, descuento, autorizacion, pagos };
 }
 
 function armarVenta(id) {
   return { ...repo.buscarPorId(id), items: repo.itemsDe(id), pagos: repo.pagosDe(id) };
 }
 
-export function crear(datos) {
+export async function crear(datos, usuario, ip) {
   const v = validar(datos);
+
+  // La clave del dueño se verifica ANTES de abrir la transacción: el hash es lento
+  // y no conviene tener la base ocupada mientras tanto.
+  let autorizador = null;
+  if (v.autorizacion) {
+    const dueno = await verificarCredenciales(v.autorizacion.username, v.autorizacion.password, ip);
+    if (!permisosDe(dueno.rol).includes(SIN_LIMITE)) {
+      throw new ErrorApp(403, 'AUTORIZACION_INVALIDA', 'Ese usuario no puede autorizar descuentos');
+    }
+    autorizador = dueno.id;
+  }
 
   return transaccion(() => {
     // 0) ¿Ya registramos esta venta? Se devuelve la misma, sin tocar nada.
@@ -113,6 +140,22 @@ export function crear(datos) {
         descuento: 'El descuento no puede superar el subtotal',
       });
     }
+
+    // 2b) Tope de descuento: quien no tiene permiso "sin límite" necesita la autorización de un dueño.
+    let autorizadoPor = null;
+    if (descuento > 0 && !usuario.permisos.includes(SIN_LIMITE)) {
+      const excede = v.descuento.tipo === 'PORCENTAJE'
+        ? v.descuento.valor > DESCUENTO_MAX_EMPLEADO
+        : descuento * 10000 > DESCUENTO_MAX_EMPLEADO * subtotal;
+      if (excede) {
+        if (!autorizador) {
+          throw new ErrorApp(403, 'DESCUENTO_REQUIERE_AUTORIZACION',
+            `Un descuento mayor al ${DESCUENTO_MAX_EMPLEADO / 100} % necesita la autorización de un dueño`);
+        }
+        autorizadoPor = autorizador;
+      }
+    }
+
     const total = subtotal - descuento;
     if (total <= 0) throw new ErrorApp(400, 'TOTAL_INVALIDO', 'La venta no puede quedar en $ 0');
 
@@ -136,12 +179,13 @@ export function crear(datos) {
     // 4) Guardar: venta, ítems, descuento de stock y su movimiento.
     const ventaId = repo.insertarVenta({
       client_uuid: v.client_uuid, subtotal, descuento, total, vuelto,
+      usuario_id: usuario.id, autorizado_por: autorizadoPor,
     });
 
     const advertencias = [];
     for (const l of lineas) {
       const p = l.producto;
-        repo.insertarItem(ventaId, {
+      repo.insertarItem(ventaId, {
         producto_id: p.id, nombre: p.nombre, tipo_unidad: p.tipo_unidad, cantidad: l.cantidad,
         precio_unitario: p.precio_venta, costo_unitario: p.costo,
         costo_promedio_unitario: p.costo_promedio > 0 ? p.costo_promedio : p.costo,
@@ -151,7 +195,7 @@ export function crear(datos) {
       if (p.controla_vencimiento) repoLotes.consumirFEFO(p.id, l.cantidad);
       repoMov.registrar({
         productoId: p.id, tipo: 'VENTA', cantidad: -l.cantidad,
-        stockResultante: l.stockNuevo, refTipo: 'VENTA', refId: ventaId,
+        stockResultante: l.stockNuevo, refTipo: 'VENTA', refId: ventaId, usuarioId: usuario.id,
       });
       if (l.stockNuevo < 0) {
         advertencias.push({
@@ -165,9 +209,46 @@ export function crear(datos) {
   });
 }
 
+// Anular = marcar la venta y devolver el stock con movimientos de contrapartida. Nada se borra.
+export function anular(idCrudo, datos, usuario) {
+  const id = Number(idCrudo);
+  if (!Number.isInteger(id) || id <= 0) throw new ErrorApp(400, 'ID_INVALIDO', 'El identificador no es válido');
+  const motivo = typeof datos?.motivo === 'string' ? datos.motivo.trim() : '';
+  if (motivo.length < 3 || motivo.length > 200) {
+    throw new ErrorApp(400, 'VALIDACION', 'Hay datos que corregir', {
+      motivo: 'Escribí el motivo de la anulación (entre 3 y 200 caracteres)',
+    });
+  }
+
+  return transaccion(() => {
+    const venta = repo.buscarPorId(id);
+    if (!venta) throw new ErrorApp(404, 'VENTA_NO_ENCONTRADA', 'La venta no existe');
+    if (repo.marcarAnulada(id, usuario.id, motivo) === 0) {
+      throw new ErrorApp(409, 'VENTA_YA_ANULADA', 'Esa venta ya estaba anulada');
+    }
+    for (const it of repo.itemsDe(id)) {
+      const p = repoProductos.buscarPorId(it.producto_id);
+      repoProductos.cambiarStock(p.id, it.cantidad);
+      repoMov.registrar({
+        productoId: p.id, tipo: 'ANULACION_VENTA', cantidad: it.cantidad,
+        stockResultante: p.stock_actual + it.cantidad, motivo,
+        refTipo: 'VENTA', refId: id, usuarioId: usuario.id,
+      });
+    }
+    return armarVenta(id);
+  });
+}
+
 export function listar(query = {}) {
   const limite = Math.min(Math.max(parseInt(query.limite, 10) || 20, 1), 200);
-  return repo.listarRecientes(limite);
+  let fecha = null;
+  if (query.fecha !== undefined) {
+    if (!fechaValida(query.fecha)) {
+      throw new ErrorApp(400, 'VALIDACION', 'Hay datos que corregir', { fecha: 'La fecha no es válida' });
+    }
+    fecha = query.fecha;
+  }
+  return repo.listar({ fecha, limite });
 }
 
 export function obtener(idCrudo) {

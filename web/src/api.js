@@ -14,6 +14,11 @@ async function pedir(url, opciones = {}) {
 
   const datos = await respuesta.json().catch(() => null);
 
+  // Si el servidor dice que la sesión terminó, se lo avisamos a la aplicación.
+  if (respuesta.status === 401 && datos?.error?.code === 'NO_AUTENTICADO') {
+    window.dispatchEvent(new Event('sesion-expirada'));
+  }
+
   if (!respuesta.ok) {
     const error = new Error(datos?.error?.message ?? 'Error de comunicación con el servidor');
     error.codigo = datos?.error?.code;
@@ -66,6 +71,31 @@ export const api = {
 
   crearCompra: (datos) => pedir('/api/compras', { method: 'POST', body: JSON.stringify(datos) }),
   crearAjuste: (datos) => pedir('/api/stock/ajustes', { method: 'POST', body: JSON.stringify(datos) }),
+
+  login: (username, password) =>
+    pedir('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  logout: () => pedir('/api/auth/logout', { method: 'POST' }),
+  me: () => pedir('/api/auth/me'),
+  cambiarClave: (actual, nueva) =>
+    pedir('/api/auth/cambiar-clave', { method: 'POST', body: JSON.stringify({ actual, nueva }) }),
+
+  listarUsuarios: () => pedir('/api/usuarios'),
+  crearUsuario: (datos) => pedir('/api/usuarios', { method: 'POST', body: JSON.stringify(datos) }),
+  actualizarUsuario: (id, datos) =>
+    pedir(`/api/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(datos) }),
+  resetearClave: (id, password) =>
+    pedir(`/api/usuarios/${id}/resetear-clave`, { method: 'POST', body: JSON.stringify({ password }) }),
+
+  listarVentas: (p) => pedir(`/api/ventas?${new URLSearchParams(p)}`),
+  obtenerVenta: (id) => pedir(`/api/ventas/${id}`),
+  anularVenta: (id, motivo) =>
+    pedir(`/api/ventas/${id}/anular`, { method: 'POST', body: JSON.stringify({ motivo }) }),
+
+  vistaPreviaPrecios: (d) => pedir('/api/precios/vista-previa', { method: 'POST', body: JSON.stringify(d) }),
+  aplicarPrecios: (d) => pedir('/api/precios/aplicar', { method: 'POST', body: JSON.stringify(d) }),
+  deshacerPrecios: (id) => pedir(`/api/precios/${id}/deshacer`, { method: 'POST' }),
+  cambiosPrecios: () => pedir('/api/precios/cambios'),
+  historialPrecios: () => pedir('/api/precios/historial'),
 
 };
 

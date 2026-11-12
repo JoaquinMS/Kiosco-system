@@ -138,3 +138,10 @@ export function porcentaje(parte, total) {
   if (!total) return '—';
   return ((parte / total) * 100).toFixed(1).replace('.', ',') + ' %';
 }
+
+// ---- Etapa 7 ----
+// "12,5" -> 1250 (centésimas de punto). Acepta negativos: "-5" -> -500. Inválido -> NaN.
+export function porcentajeACentesimas(texto) {
+  const n = leerNumero(texto);
+  return Number.isFinite(n) ? Math.round(n * 100) : NaN;
+}

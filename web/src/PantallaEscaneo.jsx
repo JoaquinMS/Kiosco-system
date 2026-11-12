@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { formatearPesos, formatearCantidad } from './formato.js';
 import CampoEscaneo from './CampoEscaneo.jsx';
 import FormularioProducto from './FormularioProducto.jsx';
+import { useSesion } from './SesionContext.jsx';
 
 // Un texto de 6 o más dígitos lo tratamos como código aunque lo hayan tipeado a mano.
 const PARECE_CODIGO = /^[0-9]{6,}$/;
@@ -41,6 +42,7 @@ async function buscarPorCodigo(codigo) {
 }
 
 export default function PantallaEscaneo() {
+  const { puede } = useSesion();
   const refCampo = useRef(null);
   const ultimaPeticion = useRef(0); // para ignorar respuestas viejas
   const idHistorial = useRef(0);
@@ -182,9 +184,9 @@ export default function PantallaEscaneo() {
             <p>El código <strong>{codigoNuevo}</strong> todavía no existe en el sistema.</p>
             <div className="botones">
               <button onClick={cerrarNuevo}>Cancelar</button>
-              <button className="primario" autoFocus onClick={() => setAltaAbierta(true)}>
-                Crear producto
-              </button>
+              {puede('productos:crear')
+                ? <button className="primario" autoFocus onClick={() => setAltaAbierta(true)}>Crear producto</button>
+                : <span className="detalle">Pedile al dueño que cargue este producto.</span>}
             </div>
           </div>
         </div>

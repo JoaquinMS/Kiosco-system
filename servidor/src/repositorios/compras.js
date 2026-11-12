@@ -6,9 +6,9 @@ export function buscarPorUuid(uuid) {
 
 export function insertarCompra(c) {
   const r = db.prepare(`
-    INSERT INTO compras (client_uuid, proveedor_id, nro_comprobante, total)
-    VALUES (?, ?, ?, ?)
-  `).run(c.client_uuid, c.proveedor_id, c.nro_comprobante, c.total);
+    INSERT INTO compras (client_uuid, proveedor_id, nro_comprobante, total, usuario_id)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(c.client_uuid, c.proveedor_id, c.nro_comprobante, c.total, c.usuario_id);
   return Number(r.lastInsertRowid);
 }
 

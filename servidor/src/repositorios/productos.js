@@ -93,3 +93,7 @@ export function cambiarPrecio(id, precio) {
   db.prepare(`UPDATE productos SET precio_venta = ?, actualizado_en = datetime('now') WHERE id = ?`)
     .run(precio, id);
 }
+
+export function asignarProveedor(id, proveedorId) {
+  db.prepare('UPDATE productos SET proveedor_id = ? WHERE id = ?').run(proveedorId, id);
+}

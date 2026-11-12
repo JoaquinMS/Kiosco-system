@@ -41,7 +41,7 @@ function validar(datos) {
   return { producto_id: datos.producto_id, motivo: datos.motivo, nota, valor };
 }
 
-export function crear(datos) {
+export function crear(datos, usuario) {
   const v = validar(datos);
 
   return transaccion(() => {
@@ -67,7 +67,7 @@ export function crear(datos) {
     repoProductos.cambiarStock(p.id, delta);
     if (delta < 0 && p.controla_vencimiento) repoLotes.consumirFEFO(p.id, -delta);
     repoMov.registrar({
-      productoId: p.id, tipo: 'AJUSTE', cantidad: delta, stockResultante: stockNuevo,
+      productoId: p.id, tipo: 'AJUSTE', cantidad: delta, stockResultante: stockNuevo, usuarioId: usuario.id,
       motivo: v.motivo, nota: v.nota,
     });
 

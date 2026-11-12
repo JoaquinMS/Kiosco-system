@@ -236,7 +236,7 @@ export default function PantallaStock() {
               <h3 style={{ marginTop: 0 }}>Historial de movimientos</h3>
               <table>
                 <thead>
-                  <tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th className="num">Cantidad</th><th className="num">Stock</th></tr>
+                  <tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Usuario</th><th className="num">Cantidad</th><th className="num">Stock</th></tr>
                 </thead>
                 <tbody>
                   {movimientos.map((m) => (
@@ -244,6 +244,7 @@ export default function PantallaStock() {
                       <td>{formatearFechaHora(m.creado_en)}</td>
                       <td>{NOMBRE_TIPO[m.tipo] ?? m.tipo}</td>
                       <td>{detalle(m)}</td>
+                      <td>{m.usuario ?? '—'}</td>
                       <td className={'num ' + (m.cantidad < 0 ? 'neg' : 'pos')}>
                         {formatearCantidadConSigno(m.cantidad, producto.tipo_unidad)}
                       </td>
@@ -251,7 +252,7 @@ export default function PantallaStock() {
                     </tr>
                   ))}
                   {movimientos.length === 0 && (
-                    <tr><td colSpan="5" className="vacio">Este producto todavía no tiene movimientos.</td></tr>
+                    <tr><td colSpan="6" className="vacio">Este producto todavía no tiene movimientos.</td></tr>
                   )}
                 </tbody>
               </table>

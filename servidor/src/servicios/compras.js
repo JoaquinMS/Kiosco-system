@@ -82,7 +82,7 @@ function armarCompra(id) {
   return { ...repo.buscarPorId(id), items: repo.itemsDe(id) };
 }
 
-export function crear(datos) {
+export function crear(datos, usuario) {
   const v = validar(datos);
 
   return transaccion(() => {
@@ -126,7 +126,7 @@ export function crear(datos) {
 
     // 2) Guardar: compra, ítems, stock, costos, movimiento y lote.
     const compraId = repo.insertarCompra({
-      client_uuid: v.client_uuid, proveedor_id: v.proveedor_id,
+      client_uuid: v.client_uuid, proveedor_id: v.proveedor_id, usuario_id: usuario.id,
       nro_comprobante: v.nro_comprobante, total,
     });
 
@@ -140,8 +140,9 @@ export function crear(datos) {
         fecha_vencimiento: l.fecha, subtotal: l.subtotal,
       });
       repoProductos.aplicarCompra(p.id, l.cantidad, l.costo, promedio);
+      if (v.proveedor_id !== null) repoProductos.asignarProveedor(p.id, v.proveedor_id);
       repoMov.registrar({
-        productoId: p.id, tipo: 'COMPRA', cantidad: l.cantidad,
+        productoId: p.id, tipo: 'COMPRA', cantidad: l.cantidad, usuarioId: usuario.id,
         stockResultante: p.stock_actual + l.cantidad, refTipo: 'COMPRA', refId: compraId,
       });
       if (p.controla_vencimiento) {
