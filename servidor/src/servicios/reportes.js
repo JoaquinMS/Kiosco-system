@@ -12,7 +12,7 @@ function fallar(campo, mensaje) {
   throw new ErrorApp(400, 'VALIDACION', 'Hay datos que corregir', { [campo]: mensaje });
 }
 
-function leerRango(q) {
+export function leerRango(q) {
   const hasta = q.hasta ?? hoyArgentina();
   const desde = q.desde ?? sumarDias(hasta, -6);
   if (!fechaValida(desde)) fallar('desde', 'La fecha "desde" no es válida');

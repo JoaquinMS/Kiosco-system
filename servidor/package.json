@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "test": "node --test",
     "db:init": "node src/db/init.js",
     "db:verificar": "node src/db/verificar.js",
-    "admin:reset": "node src/db/reset-admin.js"
+    "admin:reset": "node src/db/reset-admin.js",
+    "db:respaldar": "node src/db/respaldar.js",
+    "db:restaurar": "node src/db/restaurar.js"
   },
   
   "dependencies": {

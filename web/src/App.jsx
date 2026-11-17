@@ -13,6 +13,7 @@ import PantallaVentas from './PantallaVentas.jsx';
 import PantallaPrecios from './PantallaPrecios.jsx';
 import PantallaUsuarios from './PantallaUsuarios.jsx';
 import ListaProductos from './ListaProductos.jsx';
+import PantallaDatos from './PantallaDatos.jsx';
 
 // Cada pestaña declara el permiso que necesita. (El servidor lo vuelve a controlar.)
 const PESTANAS = [
@@ -25,6 +26,7 @@ const PESTANAS = [
   { id: 'reportes', nombre: 'Reportes', permiso: 'reportes:ver', Pantalla: PantallaReportes },
   { id: 'productos', nombre: 'Productos', permiso: 'productos:escribir', Pantalla: ListaProductos },
   { id: 'precios', nombre: 'Precios', permiso: 'precios:masivos', Pantalla: PantallaPrecios },
+  { id: 'datos', nombre: 'Datos y respaldo', permiso: 'datos:exportar', Pantalla: PantallaDatos },
   { id: 'usuarios', nombre: 'Usuarios', permiso: 'usuarios:gestionar', Pantalla: PantallaUsuarios },
 ];
 

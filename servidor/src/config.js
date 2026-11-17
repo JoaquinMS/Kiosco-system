@@ -16,3 +16,16 @@ export const EMPLEADO_PUEDE_ALTA_RAPIDA = false;
 
 // Horas que dura una sesión.
 export const SESION_HORAS = 12;
+
+// ---- Etapa 8 ----
+// Dirección y puerto. Para abrir el sistema desde el celular, poné KIOSCO_HOST=0.0.0.0
+// (se hace en iniciar-kiosco.bat). Con 127.0.0.1 solo se entra desde esta PC.
+export const HOST = process.env.KIOSCO_HOST ?? '127.0.0.1';
+export const PUERTO = Number(process.env.KIOSCO_PUERTO ?? 3000);
+
+// Cuántos respaldos se conservan (se borran los más viejos).
+export const RESPALDOS_A_CONSERVAR = 30;
+
+// Carpeta donde se copia ADEMÁS cada respaldo (pendrive, disco externo, carpeta de la nube).
+// Ejemplo: 'D:\\Respaldos-Kiosco'. null = no se hace copia extra.
+export const CARPETA_COPIA_EXTRA = null;

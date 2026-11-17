@@ -29,6 +29,11 @@ async function pedir(url, opciones = {}) {
 }
 
 export const api = {
+
+  listarRespaldos: () => pedir('/api/admin/backups'),
+
+  crearRespaldo: () => pedir('/api/admin/backup', { method: 'POST' }),
+
   listarCategorias: () => pedir('/api/categorias'),
 
   crearVenta: (datos) => pedir('/api/ventas', { method: 'POST', body: JSON.stringify(datos) }),
@@ -98,6 +103,10 @@ export const api = {
   historialPrecios: () => pedir('/api/precios/historial'),
 
 };
+
+export function urlExportar(ruta, params = {}) {
+  return `/api/exportar/${ruta}?${new URLSearchParams(params)}`;
+}
 
 // Dirección para descargar un CSV (el navegador lo baja solo gracias a Content-Disposition).
 export function urlCsv(ruta, params) {

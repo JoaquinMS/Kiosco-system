@@ -7,11 +7,20 @@ import fs from 'node:fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// La base vive en servidor/datos/kiosco.db
-const carpetaDatos = path.join(__dirname, '..', '..', 'datos');
-fs.mkdirSync(carpetaDatos, { recursive: true });
+// Protección: durante los tests NUNCA se puede usar la base real.
+if (process.env.NODE_TEST_CONTEXT && !process.env.KIOSCO_DB) {
+  throw new Error('Los tests deben definir KIOSCO_DB (importá ./env.js primero).');
+}
 
-const db = new DatabaseSync(path.join(carpetaDatos, 'kiosco.db'));
+// KIOSCO_DB permite usar otra base (los tests usan ":memory:"). Por defecto: servidor/datos/kiosco.db
+let archivo = process.env.KIOSCO_DB;
+if (!archivo) {
+  const carpetaDatos = path.join(__dirname, '..', '..', 'datos');
+  fs.mkdirSync(carpetaDatos, { recursive: true });
+  archivo = path.join(carpetaDatos, 'kiosco.db');
+}
+
+const db = new DatabaseSync(archivo);
 
 // WAL: más rápido y más seguro ante cortes de luz.
 db.exec('PRAGMA journal_mode = WAL');
@@ -21,7 +30,6 @@ db.exec('PRAGMA foreign_keys = ON');
 /**
  * Ejecuta una función dentro de una transacción: o se guarda TODO o no se guarda NADA.
  * Si la función lanza un error, se hace ROLLBACK y la base queda como estaba.
- * La vamos a usar en las ventas, ingresos y ajustes de stock.
  */
 export function transaccion(fn) {
   db.exec('BEGIN IMMEDIATE');

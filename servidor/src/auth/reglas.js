@@ -38,6 +38,12 @@ export const REGLAS = Object.fromEntries([
   ...R('usuarios:gestionar',
     'GET /api/usuarios', 'POST /api/usuarios', 'PUT /api/usuarios/:id',
     'POST /api/usuarios/:id/resetear-clave'),
+
+  ...R('datos:exportar',
+    'GET /api/exportar/productos.csv', 'GET /api/exportar/ventas.csv', 'GET /api/exportar/movimientos.csv'),
+    
+  ...R('backups:gestionar',
+    'POST /api/admin/backup', 'GET /api/admin/backups', 'GET /api/admin/backups/:nombre'),
 ]);
 
 // Lo único permitido mientras el usuario todavía tiene que cambiar su contraseña.

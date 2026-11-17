@@ -22,9 +22,10 @@ const DUENO = [...new Set([
   'ventas:anular',
   'descuentos:sin_limite',
   'usuarios:gestionar',        // gestiona empleados
+  'datos:exportar',            // exportar productos, ventas y stock a CSV
 ])];
 
-const ADMIN = [...DUENO, 'usuarios:gestionar_todos'];
+const ADMIN = [...DUENO, 'usuarios:gestionar_todos', 'backups:gestionar'];
 
 const POR_ROL = { EMPLEADO, DUENO, ADMIN };
 
