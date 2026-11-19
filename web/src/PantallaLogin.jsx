@@ -24,7 +24,7 @@ export default function PantallaLogin({ onEntrar }) {
   return (
     <div className="login">
       <form className="panel" onSubmit={enviar}>
-        <h1 style={{ marginTop: 0 }}>Kiosco</h1>
+        <img src="/logo.png" alt="Logo" style={{ maxWidth: 160, display: 'block', margin: '0 auto 12px' }} />
         <p className="detalle">Iniciá sesión para continuar.</p>
         {error && <div className="error-general">{error}</div>}
         <label className="campo-form">Usuario
