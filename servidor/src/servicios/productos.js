@@ -3,10 +3,9 @@ import { transaccion } from '../db/conexion.js';
 import * as repo from '../repositorios/productos.js';
 import * as repoCategorias from '../repositorios/categorias.js';
 import * as repoMov from '../repositorios/movimientos.js';
-import { ErrorApp } from '../lib/errores.js';
 import * as repoLotes from '../repositorios/lotes.js';
 import * as repoPrecios from '../repositorios/precios.js';
-
+import { ErrorApp } from '../lib/errores.js';
 
 const MAXIMO = 2_000_000_000;
 
@@ -141,6 +140,7 @@ export function crear(datos, usuario) {
     verificarCategoria(p.categoria_id);
     verificarCodigoLibre(p.codigo_barras, null);
     const id = repo.insertar(p);
+    // El stock inicial también es un movimiento: así el historial explica TODO el stock.
     if (p.stock_actual > 0) {
       repoMov.registrar({
         productoId: id, tipo: 'STOCK_INICIAL', cantidad: p.stock_actual,
@@ -164,10 +164,11 @@ export function actualizar(idCrudo, datos, usuario) {
     verificarCategoria(p.categoria_id);
     verificarCodigoLibre(p.codigo_barras, id);
     repo.actualizar(id, p);
+    // Si cambió el precio, queda en el historial de precios.
     if (p.precio_venta !== actual.precio_venta) {
       repoPrecios.registrarHistorial({
         productoId: id, anterior: actual.precio_venta, nuevo: p.precio_venta,
-        motivo: 'EDICION', usuarioId: usuario.id,
+        motivo: 'EDICION', usuarioId: usuario?.id ?? null,
       });
     }
     return repo.buscarPorId(id);
@@ -215,7 +216,7 @@ export function cambiarPrecio(idCrudo, datos, usuario) {
       repo.cambiarPrecio(id, precio);
       repoPrecios.registrarHistorial({
         productoId: id, anterior: actual.precio_venta, nuevo: precio,
-        motivo: 'SUGERENCIA', usuarioId: usuario.id,
+        motivo: 'SUGERENCIA', usuarioId: usuario?.id ?? null,
       });
     }
     return repo.buscarPorId(id);

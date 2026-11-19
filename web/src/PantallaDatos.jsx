@@ -54,13 +54,15 @@ export default function PantallaDatos() {
           Los archivos se abren con Excel: columnas separadas, tildes correctas y números con coma decimal.
         </p>
         <div className="barra">
+          <label>Desde <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} /></label>
+          <label>Hasta <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} /></label>
+          <span className="detalle">(el rango se aplica a Ventas y Movimientos de stock)</span>
+        </div>
+
+        <div className="barra">
           <a className="enlace-boton" style={{ marginLeft: 0 }} href={urlExportar('productos.csv')}>
             ⬇ Productos y stock actual
           </a>
-        </div>
-        <div className="barra">
-          <label>Desde <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} /></label>
-          <label>Hasta <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} /></label>
           {rangoValido ? (
             <>
               <a className="enlace-boton" style={{ marginLeft: 0 }} href={urlExportar('ventas.csv', { desde, hasta })}>
@@ -71,11 +73,11 @@ export default function PantallaDatos() {
               </a>
             </>
           ) : (
-            <span className="error">Elegí un rango de fechas válido.</span>
+            <span className="error">Elegí un rango de fechas válido para exportar ventas y movimientos.</span>
           )}
         </div>
       </div>
-
+      
       {veRespaldos && (
         <div className="panel">
           <h2 style={{ marginTop: 0 }}>Respaldos de la base de datos</h2>

@@ -39,6 +39,7 @@ export function buscarPorCodigo(codigo) {
   return db.prepare(`${BASE} WHERE p.codigo_barras = ?`).get(codigo);
 }
 
+// Un producto nuevo arranca con costo promedio igual a su costo.
 export function insertar(p) {
   const r = db.prepare(`
     INSERT INTO productos
@@ -52,7 +53,7 @@ export function insertar(p) {
   return Number(r.lastInsertRowid);
 }
 
-// No toca stock_actual ni tipo_unidad (ver explicación de la etapa).
+// No toca stock_actual ni tipo_unidad (el stock solo cambia con movimientos).
 export function actualizar(id, p) {
   db.prepare(`
     UPDATE productos
@@ -94,6 +95,7 @@ export function cambiarPrecio(id, precio) {
     .run(precio, id);
 }
 
+// Proveedor habitual: el del último ingreso de mercadería.
 export function asignarProveedor(id, proveedorId) {
   db.prepare('UPDATE productos SET proveedor_id = ? WHERE id = ?').run(proveedorId, id);
 }

@@ -9,7 +9,8 @@ export default function FormularioProducto({ producto, codigoInicial = '', categ
   const { puede } = useSesion();
   const esEdicion = producto !== null;
   const refNombre = useRef(null);
-  
+
+  // Los campos del formulario son texto, tal como los escribe la persona.
   const [f, setF] = useState(() => ({
     codigo_barras: producto?.codigo_barras ?? codigoInicial,
     nombre: producto?.nombre ?? '',
@@ -61,8 +62,9 @@ export default function FormularioProducto({ producto, codigoInicial = '', categ
     }
 
     // 2) Armar lo que se envía al servidor.
+    const codigo = f.codigo_barras.trim();
     const datos = {
-      codigo_barras: producto?.codigo_barras ?? codigoInicial,
+      codigo_barras: codigo === '' ? null : codigo,   // lo que hay en el CAMPO, no el valor inicial
       nombre: f.nombre,
       categoria_id: f.categoria_id === '' ? null : Number(f.categoria_id),
       tipo_unidad: f.tipo_unidad,
